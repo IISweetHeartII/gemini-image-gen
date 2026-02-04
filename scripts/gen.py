@@ -20,6 +20,19 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+STYLE_PRESETS = {
+    "photo": "ultra-detailed photorealistic photography, 8K resolution, sharp focus",
+    "anime": "high-quality anime illustration, Studio Ghibli inspired, vibrant colors",
+    "watercolor": "delicate watercolor painting on textured paper, soft edges, gentle color bleeding",
+    "cyberpunk": "neon-lit cyberpunk scene, rain-soaked streets, holographic displays, Blade Runner aesthetic",
+    "minimalist": "clean minimalist design, geometric shapes, limited color palette, white space",
+    "oil-painting": "classical oil painting with visible brushstrokes, rich textures, Renaissance lighting",
+    "pixel-art": "detailed pixel art, retro 16-bit style, crisp edges, nostalgic palette",
+    "sketch": "pencil sketch on cream paper, hatching and cross-hatching, artistic imperfections",
+    "3d-render": "professional 3D render, ambient occlusion, global illumination, photorealistic materials",
+    "pop-art": "bold pop art style, Ben-Day dots, strong outlines, vibrant contrasting colors",
+}
+
 API_BASE = "https://generativelanguage.googleapis.com/v1beta"
 
 GEMINI_DEFAULT_MODEL = "gemini-2.5-flash-image"
@@ -289,7 +302,17 @@ Examples:
     ap.add_argument("--aspect", default="1:1",
                     help="Aspect ratio for Imagen: 1:1, 16:9, 9:16, 4:3, 3:4 (default: 1:1).")
     ap.add_argument("--out-dir", default="", help="Output directory.")
+    ap.add_argument("--style", choices=sorted(STYLE_PRESETS.keys()),
+                    help="Style preset to prepend to prompt.")
+    ap.add_argument("--styles", action="store_true",
+                    help="List available style presets and exit.")
     args = ap.parse_args()
+
+    if args.styles:
+        print("Available styles:")
+        for key in sorted(STYLE_PRESETS.keys()):
+            print(f"- {key}: {STYLE_PRESETS[key]}")
+        return 0
 
     api_key = (os.environ.get("GEMINI_API_KEY") or "").strip()
     if not api_key:
@@ -311,6 +334,9 @@ Examples:
         count = 1
     else:
         prompts = [args.prompt] * count if args.prompt else pick_prompts(count)
+
+    if args.style:
+        prompts = [f"{STYLE_PRESETS[args.style]}. {prompt}" for prompt in prompts]
 
     print(f"Engine: {args.engine} ({model})")
     print(f"Output: {out_dir.as_posix()}\n")
